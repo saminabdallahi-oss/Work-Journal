@@ -101,6 +101,76 @@ body{
   width:100%;height:100%;
   overflow:hidden;
 }
+/* ── BOOK UNFOLD ANIMATION ── */
+/* Perspective container wraps the whole cover scene */
+.cover-scene{
+  perspective:1200px;
+  perspective-origin:30% 50%;
+}
+/* The cover "flap" — the front cover that flips open */
+.REMOVED{
+  position:absolute;
+  /* match journal book position and size */
+  left:50%;top:50%;
+  transform:translate(-46%,-50%);
+  width:min(200px,52vw);
+  aspect-ratio:3/4.2;
+  z-index:6;
+  transform-origin:left center;
+  transform-style:preserve-3d;
+  /* starts flat (closed) */
+  transform:translate(-46%,-50%) rotateY(0deg);
+  transition:transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  pointer-events:none;
+}
+.REMOVED.opening{
+  transform:translate(-46%,-50%) rotateY(-160deg);
+}
+/* front face of flap = same cover art */
+
+/* inside face of flap = warm cream paper */
+
+/* page reveal — cream page that appears behind the flap */
+.REMOVED{
+  position:absolute;
+  left:50%;top:50%;
+  transform:translate(-46%,-50%);
+  width:min(200px,52vw);
+  aspect-ratio:3/4.2;
+  z-index:5;
+  border-radius:2px 8px 8px 2px;
+  background:linear-gradient(170deg,#fdfaf6,#faf5ec);
+  background-image:repeating-linear-gradient(transparent,transparent 27px,rgba(42,32,64,0.07) 27px,rgba(42,32,64,0.07) 28px);
+  opacity:0;
+  transition:opacity 0.3s ease 0.3s;
+  overflow:hidden;
+}
+.REMOVED.show{opacity:1;}
+/* spine stays visible during animation */
+.book-spine-static{
+  position:absolute;
+  left:50%;top:50%;
+  transform:translate(-46%,-50%);
+  width:min(200px,52vw);
+  aspect-ratio:3/4.2;
+  z-index:7;
+  pointer-events:none;
+}
+/* screen expand — the journal content expands to fill screen */
+@keyframes expandToFull{
+  0%{
+    clip-path:inset(30% 25% 30% 25% round 8px);
+    opacity:0.6;
+  }
+  100%{
+    clip-path:inset(0% 0% 0% 0% round 0px);
+    opacity:1;
+  }
+}
+.screen-expanding{
+  animation:expandToFull 0.45s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
 /* walnut wood base */
 .wood-base{
   position:absolute;inset:0;
@@ -966,6 +1036,66 @@ body.pro-mode .notes-canvas{background-color:#fff;}
 
 /* scroll end spacer */
 .scroll-end{height:20px;}
+
+/* ── BOOK OPEN ANIMATION ── */
+/* perspective container wraps the journal on cover */
+.cover-journal-perspective{
+  position:absolute;
+  left:50%;top:50%;
+  transform:translate(-46%,-50%);
+  width:min(200px,52vw);
+  aspect-ratio:3/4.2;
+  z-index:5;
+  perspective:900px;
+  perspective-origin:0% 50%;
+}
+/* the actual journal — becomes the page that flips */
+.cover-journal{
+  position:relative;
+  width:100%;height:100%;
+  transform-style:preserve-3d;
+  transform-origin:left center;
+  transition:none;
+}
+/* opening state */
+.cover-journal.book-opening{
+  animation:bookOpen 0.85s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes bookOpen{
+  0%  { transform:rotateY(0deg); }
+  100%{ transform:rotateY(-105deg); }
+}
+/* inside of cover — visible as the page flips */
+.cj-inside{
+  position:absolute;inset:0;
+  backface-visibility:hidden;
+  border-radius:2px 8px 8px 2px;
+  background:var(--th-paper);
+  z-index:14;
+  transform:rotateY(180deg);
+  display:flex;align-items:center;justify-content:center;
+}
+.cj-inside-lines{
+  width:80%;display:flex;flex-direction:column;gap:12%;
+}
+.cj-inside-line{
+  height:1px;background:var(--th-primary);opacity:0.3;border-radius:99px;
+}
+/* cover front face */
+.cj-wrap{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+}
+/* cover scene expansion after flip */
+.cover-scene.expanding{
+  animation:sceneExpand 0.5s cubic-bezier(0.4,0,0.2,1) 0.7s forwards;
+}
+@keyframes sceneExpand{
+  0%  { opacity:1; }
+  100%{ opacity:0; }
+}
+
 </style>
 </head>
 <body>
@@ -994,20 +1124,32 @@ body.pro-mode .notes-canvas{background-color:#fff;}
     <div class="desk-sticker-2" id="desk-sticker-2">✨</div>
 
     <!-- Journal book -->
-    <div class="cover-journal">
-      <div class="cj-shadow"></div>
-      <div class="cj-wrap">
-        <div class="cj-bg"></div>
-        <div class="cj-texture"></div>
-        <div class="cj-photo" id="cj-photo"></div>
-        <div class="cj-photo-overlay"></div>
-        <div class="cj-art" id="cj-art"></div>
-        <div class="cj-spine"></div>
-        <div class="cj-spine-hl"></div>
-        <div class="cj-pages"></div>
+    <div class="cover-journal-perspective">
+      <div class="cover-journal" id="cover-journal">
+        <div class="cj-shadow"></div>
+        <!-- front cover face -->
+        <div class="cj-wrap">
+          <div class="cj-bg"></div>
+          <div class="cj-texture"></div>
+          <div class="cj-photo" id="cj-photo"></div>
+          <div class="cj-photo-overlay"></div>
+          <div class="cj-art" id="cj-art"></div>
+          <div class="cj-spine"></div>
+          <div class="cj-spine-hl"></div>
+          <div class="cj-pages"></div>
+        </div>
+        <!-- inside of cover — shown as page flips -->
+        <div class="cj-inside">
+          <div class="cj-inside-lines">
+            <div class="cj-inside-line"></div>
+            <div class="cj-inside-line"></div>
+            <div class="cj-inside-line"></div>
+            <div class="cj-inside-line"></div>
+            <div class="cj-inside-line"></div>
+          </div>
+        </div>
       </div>
     </div>
-
     <!-- Hidden seasonal icon trigger -->
     <div id="cover-secret" onclick="document.getElementById('pw-overlay').classList.add('show');setTimeout(()=>document.getElementById('pw-input').focus(),80);" style="
       position:absolute;
@@ -1642,6 +1784,11 @@ function applyTheme(month){
   // cover art
   const art = document.getElementById('cj-art');
   if(art) art.innerHTML = t.cover();
+  // flap art (mirror of cover)
+  const fart = document.getElementById('flap-art');
+  if(fart) fart.innerHTML = t.cover();
+  const fphoto = document.getElementById('flap-photo');
+  if(fphoto) fphoto.style.backgroundImage = `url('${t.photo}')`;
   // desk petals
   const petals = document.getElementById('desk-petals');
   if(petals) petals.innerHTML = renderDeskPetals(t);
@@ -1741,16 +1888,26 @@ function unlock(){
   if(val===S.pw){
     sessionStorage.setItem('journal_auth','1');
     document.getElementById('pw-overlay').classList.remove('show');
-    // flash!
-    const fl=document.getElementById('flash-overlay');
-    fl.classList.add('active');
+    // Step 1 — book cover flips open (left page sweeps away like a real book)
+    const journal=document.getElementById('cover-journal');
+    if(journal) journal.classList.add('book-opening');
+    // Step 2 — white flash blooms after the flip is mostly done
     setTimeout(()=>{
-      fl.classList.remove('active');
+      const fl=document.getElementById('flash-overlay');
+      fl.classList.add('active');
+    },720);
+    // Step 3 — flash clears, journal app appears full screen
+    setTimeout(()=>{
+      document.getElementById('flash-overlay').classList.remove('active');
       document.getElementById('screen-pw').classList.remove('active');
       document.getElementById('nav-bar').style.display='flex';
       showToolbar(true);
       goTo('weekly');
-    },600);
+      // reset journal for next unlock
+      setTimeout(()=>{
+        if(journal){journal.style.transition='none';journal.classList.remove('book-opening');setTimeout(()=>{journal.style.transition='';},50);}
+      },400);
+    },1250);
   } else {
     document.getElementById('pw-err').classList.add('show');
     document.getElementById('pw-input').value='';
